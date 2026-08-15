@@ -1,21 +1,18 @@
-import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 
-let mongod: MongoMemoryServer | null = null;
-
+// The shared in-memory MongoDB instance and its URI are set up once for the whole run by
+// globalSetup.ts (see vitest.config.mts) - this just connects/disconnects mongoose's
+// default connection against that single instance, per test file.
 export async function connectTestDb() {
-  mongod = await MongoMemoryServer.create();
-  const uri = mongod.getUri();
-  process.env.MONGODB_URI = uri;
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error("MONGODB_URI not set - globalSetup should have configured it");
+  }
   await mongoose.connect(uri);
 }
 
 export async function disconnectTestDb() {
   await mongoose.disconnect();
-  if (mongod) {
-    await mongod.stop();
-    mongod = null;
-  }
 }
 
 export async function clearTestDb() {

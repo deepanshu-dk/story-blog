@@ -1,18 +1,9 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { describe, it, expect, afterAll } from "vitest";
 import mongoose from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 
-let mongod: MongoMemoryServer;
-
-beforeAll(async () => {
-  mongod = await MongoMemoryServer.create();
-  process.env.MONGODB_URI = mongod.getUri();
-});
-
 afterAll(async () => {
   await mongoose.disconnect();
-  await mongod.stop();
 });
 
 describe("connectToDatabase", () => {
