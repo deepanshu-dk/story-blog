@@ -80,6 +80,24 @@ export async function listStories(filters: StoryListFilters = {}) {
   return Post.find(query).sort(sortSpec).lean();
 }
 
+export async function getDashboardStats() {
+  await requireAdminSession();
+  await connectToDatabase();
+
+  const [total, active, mostViewed] = await Promise.all([
+    Post.countDocuments({}),
+    Post.countDocuments({ isActive: true }),
+    Post.find().sort({ viewCount: -1 }).limit(5).lean(),
+  ]);
+
+  return {
+    total,
+    active,
+    inactive: total - active,
+    mostViewed,
+  };
+}
+
 export async function getStoryById(id: string) {
   await requireAdminSession();
   await connectToDatabase();
