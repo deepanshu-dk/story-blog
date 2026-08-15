@@ -3,6 +3,7 @@
 import { connectToDatabase } from "@/lib/db";
 import { requireAdminSession } from "@/lib/session";
 import Post from "@/models/Post";
+import { revalidateTags, postTag, categoryTag } from "@/lib/cacheTags";
 
 export interface ContentSectionInput {
   type: "text" | "image";
@@ -93,14 +94,18 @@ export async function createStory(input: StoryInput & { isActive: boolean }) {
     throw new Error("Every image needs alt text before a story can go Active");
   }
 
+  let created;
   try {
-    return await Post.create(input);
+    created = await Post.create(input);
   } catch (err: unknown) {
     if (isDuplicateKeyError(err)) {
       throw new Error(`Slug "${input.slug}" is already in use`);
     }
     throw err;
   }
+
+  await revalidateTags([postTag(created.slug), categoryTag(created.categoryName)]);
+  return created;
 }
 
 export async function updateStory(
@@ -127,6 +132,8 @@ export async function updateStory(
     throw new Error("Every image needs alt text before a story can go Active");
   }
 
+  const previousSlug = existing.slug;
+  const previousCategoryName = existing.categoryName;
   Object.assign(existing, input);
 
   try {
@@ -137,6 +144,13 @@ export async function updateStory(
     }
     throw err;
   }
+
+  await revalidateTags([
+    postTag(existing.slug),
+    postTag(previousSlug),
+    categoryTag(existing.categoryName),
+    categoryTag(previousCategoryName),
+  ]);
 
   return existing;
 }
@@ -151,6 +165,10 @@ export async function deleteStory(id: string) {
   }
 
   await Post.deleteOne({ _id: id });
+
+  // Delete revalidates the same tag set as deactivating it, so the sitemap and listings
+  // drop it immediately (see docs/plans - F2's delete-vs-deactivate handling).
+  await revalidateTags([postTag(existing.slug), categoryTag(existing.categoryName)]);
 }
 
 function isDuplicateKeyError(err: unknown): boolean {

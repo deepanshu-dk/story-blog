@@ -5,6 +5,7 @@ import { connectToDatabase } from "@/lib/db";
 import { requireAdminSession } from "@/lib/session";
 import Category, { UNCATEGORIZED_SLUG } from "@/models/Category";
 import Post from "@/models/Post";
+import { revalidateTags, categoryTag } from "@/lib/cacheTags";
 
 export async function listCategories() {
   await requireAdminSession();
@@ -41,11 +42,14 @@ export async function renameCategory(categoryId: string, newName: string) {
     throw new Error("Category not found");
   }
 
+  const previousName = category.name;
   category.name = newName;
   await category.save();
 
   // Re-sync the denormalized categoryName on every Post referencing this category.
   await Post.updateMany({ category: category._id }, { categoryName: newName });
+
+  await revalidateTags([categoryTag(previousName), categoryTag(newName)]);
 
   return category;
 }
@@ -108,6 +112,8 @@ export async function deleteCategory(categoryId: string) {
   }
 
   await Category.deleteOne({ _id: category._id });
+
+  await revalidateTags([categoryTag(category.name), categoryTag(uncategorized.name)]);
 
   return { reassignedCount: reassignResult.modifiedCount };
 }
