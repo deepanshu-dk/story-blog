@@ -1,61 +1,57 @@
 import { unstable_cache } from "next/cache";
+import type { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
-import Post from "@/models/Post";
+import Post, { type PostDocument } from "@/models/Post";
 import { POSTS_TAG, postTag, categoryTag } from "@/lib/cacheTags";
+import type { ContentSection, StoryImage, StorySeo } from "@/types/story";
 
-export interface PublicContentSection {
-  type: "text" | "image";
-  content?: string;
-  url?: string;
-  alt?: string;
-  caption?: string;
-}
-
-export interface PublicImage {
-  url: string;
-  alt: string;
-  caption?: string;
-}
-
-export interface PublicSeo {
-  title?: string;
-  metaDescription?: string;
-  canonicalUrl?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-}
+export type { ContentSection as PublicContentSection, StoryImage as PublicImage, StorySeo as PublicSeo };
 
 export interface PublicStory {
   id: string;
   slug: string;
   title: string;
   intro: string;
-  contentSections: PublicContentSection[];
-  featuredImage: PublicImage;
+  contentSections: ContentSection[];
+  featuredImage: StoryImage;
   category: string;
   categoryName: string;
   tags: string[];
   relatedPosts: string[];
-  seo: PublicSeo;
+  seo: StorySeo;
   viewCount: number;
   createdAt: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function serializePost(post: any): PublicStory {
+type LeanPost = PostDocument & { _id: Types.ObjectId };
+
+function serializePost(post: LeanPost): PublicStory {
+  const seo = post.seo ?? {};
   return {
     id: post._id.toString(),
     slug: post.slug,
     title: post.title,
     intro: post.intro,
-    contentSections: post.contentSections ?? [],
-    featuredImage: post.featuredImage,
+    contentSections: (post.contentSections ?? []).map((section) => ({
+      type: section.type,
+      content: section.content ?? undefined,
+      url: section.url ?? undefined,
+      alt: section.alt ?? undefined,
+      caption: section.caption ?? undefined,
+    })),
+    featuredImage: { url: post.featuredImage.url, alt: post.featuredImage.alt ?? "" },
     category: post.category.toString(),
     categoryName: post.categoryName,
     tags: post.tags ?? [],
     relatedPosts: (post.relatedPosts ?? []).map((p: { toString(): string }) => p.toString()),
-    seo: post.seo ?? {},
+    seo: {
+      title: seo.title ?? undefined,
+      metaDescription: seo.metaDescription ?? undefined,
+      canonicalUrl: seo.canonicalUrl ?? undefined,
+      ogTitle: seo.ogTitle ?? undefined,
+      ogDescription: seo.ogDescription ?? undefined,
+      ogImage: seo.ogImage ?? undefined,
+    },
     viewCount: post.viewCount,
     createdAt: new Date(post.createdAt).toISOString(),
   };
@@ -71,7 +67,7 @@ export async function getActiveStoryBySlug(slug: string): Promise<PublicStory | 
     async () => {
       await connectToDatabase();
       const post = await Post.findOne({ slug, isActive: true }).lean();
-      return post ? serializePost(post) : null;
+      return post ? serializePost(post as LeanPost) : null;
     },
     ["active-story", slug],
     { tags: [POSTS_TAG, postTag(slug)] }
@@ -86,7 +82,7 @@ export async function listActiveStories(limit = 20): Promise<PublicStory[]> {
         .sort({ createdAt: -1 })
         .limit(limit)
         .lean();
-      return posts.map(serializePost);
+      return (posts as LeanPost[]).map(serializePost);
     },
     ["active-stories", String(limit)],
     { tags: [POSTS_TAG] }
@@ -98,7 +94,7 @@ export async function listActiveStoriesByCategory(categoryName: string): Promise
     async () => {
       await connectToDatabase();
       const posts = await Post.find({ isActive: true, categoryName }).sort({ createdAt: -1 }).lean();
-      return posts.map(serializePost);
+      return (posts as LeanPost[]).map(serializePost);
     },
     ["active-stories-by-category", categoryName],
     { tags: [POSTS_TAG, categoryTag(categoryName)] }
@@ -116,7 +112,7 @@ export async function listRelatedStories(story: PublicStory, limit = 4): Promise
       })
         .limit(limit)
         .lean();
-      return posts.map(serializePost);
+      return (posts as LeanPost[]).map(serializePost);
     },
     ["related-stories", story.id],
     { tags: [POSTS_TAG, categoryTag(story.categoryName)] }
@@ -151,5 +147,5 @@ export async function searchActiveStories(rawQuery: unknown): Promise<PublicStor
     .sort({ score: { $meta: "textScore" } })
     .lean();
 
-  return posts.map(serializePost);
+  return (posts as LeanPost[]).map(serializePost);
 }

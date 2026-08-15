@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from "vitest";
 import { connectTestDb, disconnectTestDb, clearTestDb } from "@/lib/__tests__/testDb";
 
-let requestHeaders = new Headers({ "x-forwarded-for": "203.0.113.20" });
+let requestHeaders = new Headers({ "x-real-ip": "203.0.113.20" });
 vi.mock("next/headers", () => ({
   headers: async () => requestHeaders,
 }));
@@ -22,7 +22,7 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await clearTestDb();
-  requestHeaders = new Headers({ "x-forwarded-for": "203.0.113.20" });
+  requestHeaders = new Headers({ "x-real-ip": "203.0.113.20" });
 });
 
 describe("submitStoryRequest", () => {
@@ -57,6 +57,17 @@ describe("submitStoryRequest", () => {
       await submitStoryRequest("अ".repeat(501), ""); // each counts as a failed attempt
     }
     const result = await submitStoryRequest("valid message", "");
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/too many requests/i);
+  });
+
+  it("throttles a flood of valid-length accepted submissions too, not just rejected ones", async () => {
+    for (let i = 0; i < 5; i++) {
+      const result = await submitStoryRequest(`valid message ${i}`, "");
+      expect(result.success).toBe(true);
+    }
+
+    const result = await submitStoryRequest("one more valid message", "");
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many requests/i);
   });

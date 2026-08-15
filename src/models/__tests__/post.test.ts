@@ -57,32 +57,35 @@ describe("Post model", () => {
     });
   });
 
-  it("fails validation when an image section is missing alt text", async () => {
+  it("fails validation when an image section is missing its url", async () => {
     const category = await makeCategory();
     await expect(
       Post.create({
-        slug: "missing-alt",
+        slug: "missing-url",
         title: "T",
         intro: "I",
-        contentSections: [{ type: "image", url: "https://example.com/x.jpg" }],
+        contentSections: [{ type: "image", alt: "a" }],
         featuredImage: { url: "https://example.com/a.jpg", alt: "a" },
         category: category._id,
         categoryName: category.name,
       })
-    ).rejects.toThrow(/alt/i);
+    ).rejects.toThrow(/url/i);
   });
 
-  it("fails validation when the featured image is missing alt text", async () => {
+  it("allows saving a draft with an image section or featured image missing alt text (R15: alt only required before Active)", async () => {
     const category = await makeCategory();
-    await expect(
-      Post.create({
-        slug: "missing-featured-alt",
-        title: "T",
-        intro: "I",
-        featuredImage: { url: "https://example.com/a.jpg" },
-        category: category._id,
-        categoryName: category.name,
-      })
-    ).rejects.toThrow();
+    const post = await Post.create({
+      slug: "missing-alt-draft",
+      title: "T",
+      intro: "I",
+      contentSections: [{ type: "image", url: "https://example.com/x.jpg" }],
+      featuredImage: { url: "https://example.com/a.jpg" },
+      category: category._id,
+      categoryName: category.name,
+      isActive: false,
+    });
+
+    expect(post.featuredImage.alt).toBeUndefined();
+    expect(post.contentSections[0].alt).toBeUndefined();
   });
 });

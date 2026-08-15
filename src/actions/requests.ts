@@ -41,6 +41,11 @@ export async function submitStoryRequest(
     return { success: false, error: "Message is too long." };
   }
 
+  // Every accepted submission counts toward the flood limit too, not just rejected ones -
+  // this is a public, unauthenticated, DB-writing endpoint, so a flood of valid-length
+  // messages needs to be throttled just as much as a flood of oversized ones.
+  await recordFailedAttempt(RATE_LIMIT_SCOPE, ip);
+
   await connectToDatabase();
   await StoryRequest.create({ message: trimmed });
 

@@ -4,41 +4,21 @@ import { connectToDatabase } from "@/lib/db";
 import { requireAdminSession } from "@/lib/session";
 import Post from "@/models/Post";
 import { revalidateTags, postTag, categoryTag } from "@/lib/cacheTags";
+import type { ContentSection, StoryImage, StorySeo } from "@/types/story";
 
-export interface ContentSectionInput {
-  type: "text" | "image";
-  content?: string;
-  url?: string;
-  alt?: string;
-  caption?: string;
-}
-
-export interface ImageInput {
-  url: string;
-  alt: string;
-  caption?: string;
-}
-
-export interface SeoInput {
-  title?: string;
-  metaDescription?: string;
-  canonicalUrl?: string;
-  ogTitle?: string;
-  ogDescription?: string;
-  ogImage?: string;
-}
+export type { ContentSection as ContentSectionInput, StoryImage as ImageInput, StorySeo as SeoInput };
 
 export interface StoryInput {
   slug: string;
   title: string;
   intro: string;
-  contentSections: ContentSectionInput[];
-  featuredImage: ImageInput;
+  contentSections: ContentSection[];
+  featuredImage: StoryImage;
   category: string;
   categoryName: string;
   tags: string[];
   relatedPosts: string[];
-  seo: SeoInput;
+  seo: StorySeo;
 }
 
 export interface StoryListFilters {

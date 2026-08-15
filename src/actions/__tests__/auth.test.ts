@@ -41,7 +41,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await clearTestDb();
   cookieJar.clear();
-  requestHeaders = new Headers({ "x-forwarded-for": "203.0.113.10" });
+  requestHeaders = new Headers({ "x-real-ip": "203.0.113.10" });
 });
 
 describe("login", () => {
@@ -76,6 +76,18 @@ describe("login", () => {
     const result = await login("admin", "correct-horse-battery-staple");
     expect(result.success).toBe(false);
     expect(result.error).toMatch(/too many attempts/i);
+  });
+
+  it("throws rather than failing open when ADMIN_USERNAME/ADMIN_PASSWORD are unset", async () => {
+    const savedUsername = process.env.ADMIN_USERNAME;
+    const savedPassword = process.env.ADMIN_PASSWORD;
+    delete process.env.ADMIN_USERNAME;
+    delete process.env.ADMIN_PASSWORD;
+
+    await expect(login("", "")).rejects.toThrow(/ADMIN_USERNAME/);
+
+    process.env.ADMIN_USERNAME = savedUsername;
+    process.env.ADMIN_PASSWORD = savedPassword;
   });
 
   it("invalidates a previously-issued session after invalidateAllSessions() bumps the version", async () => {

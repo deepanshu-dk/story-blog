@@ -2,12 +2,9 @@
 
 import { useState } from "react";
 import { CldUploadWidget } from "next-cloudinary";
+import type { StoryImage } from "@/types/story";
 
-export interface UploadedImage {
-  url: string;
-  alt: string;
-  caption?: string;
-}
+export type UploadedImage = StoryImage;
 
 interface ImageUploadFieldProps {
   label: string;
@@ -25,6 +22,17 @@ type UploadState = "idle" | "uploading" | "success" | "error";
  */
 export function ImageUploadField({ label, value, onChange, required }: ImageUploadFieldProps) {
   const [state, setState] = useState<UploadState>(value ? "success" : "idle");
+  // Tracked independently of `value` so alt text typed before an image URL exists (e.g.
+  // while an upload is still in flight) isn't silently discarded - it's merged in once
+  // the upload completes.
+  const [pendingAlt, setPendingAlt] = useState(value?.alt ?? "");
+
+  function handleAltChange(alt: string) {
+    setPendingAlt(alt);
+    if (value) {
+      onChange({ ...value, alt });
+    }
+  }
 
   return (
     <div className="space-y-2">
@@ -45,7 +53,7 @@ export function ImageUploadField({ label, value, onChange, required }: ImageUplo
         onSuccess={(result) => {
           const info = result.info;
           if (info && typeof info === "object" && "secure_url" in info) {
-            onChange({ url: info.secure_url as string, alt: value?.alt ?? "" });
+            onChange({ url: info.secure_url as string, alt: pendingAlt });
             setState("success");
           }
         }}
@@ -84,8 +92,8 @@ export function ImageUploadField({ label, value, onChange, required }: ImageUplo
         <input
           type="text"
           required={required}
-          value={value?.alt ?? ""}
-          onChange={(e) => onChange(value ? { ...value, alt: e.target.value } : null)}
+          value={value?.alt ?? pendingAlt}
+          onChange={(e) => handleAltChange(e.target.value)}
           className="w-full rounded border border-neutral-300 px-2 py-1 text-sm focus:border-neutral-500 focus:outline-none"
           placeholder="Describe the image for screen readers and SEO"
         />

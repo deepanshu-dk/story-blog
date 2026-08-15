@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
 const rateLimitAttemptSchema = new Schema({
   // e.g. "login:203.0.113.4" or "story-request:203.0.113.4"
@@ -9,5 +9,7 @@ const rateLimitAttemptSchema = new Schema({
   updatedAt: { type: Date, default: Date.now, expires: 60 * 60 * 24 }, // 24h
 });
 
-export default mongoose.models.RateLimitAttempt ||
-  mongoose.model("RateLimitAttempt", rateLimitAttemptSchema);
+export type RateLimitAttemptDocument = InferSchemaType<typeof rateLimitAttemptSchema>;
+
+export default (mongoose.models.RateLimitAttempt as Model<RateLimitAttemptDocument>) ??
+  mongoose.model<RateLimitAttemptDocument>("RateLimitAttempt", rateLimitAttemptSchema);

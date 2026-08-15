@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
 // Single-document collection: exactly one SessionConfig row exists, holding the
 // current session-secret version. Bumping it (on password rotation) invalidates
@@ -8,8 +8,10 @@ const sessionConfigSchema = new Schema({
   sessionSecretVersion: { type: Number, required: true, default: 1 },
 });
 
-const SessionConfig =
-  mongoose.models.SessionConfig || mongoose.model("SessionConfig", sessionConfigSchema);
+export type SessionConfigDocument = InferSchemaType<typeof sessionConfigSchema>;
+
+const SessionConfig = (mongoose.models.SessionConfig as Model<SessionConfigDocument>) ??
+  mongoose.model<SessionConfigDocument>("SessionConfig", sessionConfigSchema);
 
 export async function getSessionSecretVersion(): Promise<number> {
   let doc = await SessionConfig.findOne();

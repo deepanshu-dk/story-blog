@@ -24,13 +24,36 @@ export async function ensureUncategorizedCategory() {
   await connectToDatabase();
   let category = await Category.findOne({ slug: UNCATEGORIZED_SLUG });
   if (!category) {
-    category = await Category.create({
-      name: "Uncategorized",
-      slug: UNCATEGORIZED_SLUG,
-      isProtected: true,
-    });
+    try {
+      category = await Category.create({
+        name: "Uncategorized",
+        slug: UNCATEGORIZED_SLUG,
+        isProtected: true,
+      });
+    } catch (err: unknown) {
+      // Two concurrent first-time callers can both find nothing and both attempt to
+      // create it; the loser of the race re-fetches the winner's document instead of
+      // crashing on the unique-slug constraint.
+      if (isDuplicateKeyError(err)) {
+        category = await Category.findOne({ slug: UNCATEGORIZED_SLUG });
+      } else {
+        throw err;
+      }
+    }
+  }
+  if (!category) {
+    throw new Error("Failed to create or find the Uncategorized category");
   }
   return category;
+}
+
+function isDuplicateKeyError(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: number }).code === 11000
+  );
 }
 
 export async function renameCategory(categoryId: string, newName: string) {

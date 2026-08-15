@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getDashboardStats } from "@/actions/stories";
+import { SecurityActions } from "./SecurityActions";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +66,11 @@ export default async function AdminDashboardPage() {
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="border-t border-neutral-200 pt-4">
+        <h2 className="mb-3 text-sm font-semibold text-neutral-700">Security</h2>
+        <SecurityActions />
       </section>
     </div>
   );

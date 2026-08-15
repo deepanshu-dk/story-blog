@@ -31,12 +31,29 @@ export default async function EditStoryPage({
     slug: story.slug,
     title: story.title,
     intro: story.intro,
-    contentSections: story.contentSections ?? [],
-    featuredImage: story.featuredImage,
+    contentSections: (story.contentSections ?? []).map((section) => ({
+      type: section.type,
+      content: section.content ?? undefined,
+      url: section.url ?? undefined,
+      alt: section.alt ?? undefined,
+      caption: section.caption ?? undefined,
+    })),
+    featuredImage: {
+      url: story.featuredImage.url,
+      alt: story.featuredImage.alt ?? "",
+      caption: story.featuredImage.caption ?? undefined,
+    },
     category: story.category.toString(),
     tags: (story.tags ?? []).join(", "),
     relatedPosts: (story.relatedPosts ?? []).map((p: { toString(): string }) => p.toString()),
-    seo: story.seo ?? {},
+    seo: {
+      title: story.seo?.title ?? undefined,
+      metaDescription: story.seo?.metaDescription ?? undefined,
+      canonicalUrl: story.seo?.canonicalUrl ?? undefined,
+      ogTitle: story.seo?.ogTitle ?? undefined,
+      ogDescription: story.seo?.ogDescription ?? undefined,
+      ogImage: story.seo?.ogImage ?? undefined,
+    },
     isActive: story.isActive,
   };
 

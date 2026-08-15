@@ -15,5 +15,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: "/admin/((?!login).*)",
+  // Matches bare /admin (the dashboard) as well as every /admin/* path except /admin/login.
+  matcher: ["/admin", "/admin/((?!login).*)"],
 };

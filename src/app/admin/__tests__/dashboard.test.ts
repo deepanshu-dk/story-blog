@@ -17,7 +17,7 @@ const { default: Post } = await import("@/models/Post");
 const { default: Category } = await import("@/models/Category");
 
 vi.mock("next/headers", () => ({
-  headers: async () => new Headers({ "x-forwarded-for": "203.0.113.30" }),
+  headers: async () => new Headers({ "x-real-ip": "203.0.113.30" }),
 }));
 
 beforeAll(async () => {

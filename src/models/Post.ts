@@ -1,4 +1,4 @@
-import mongoose, { Schema, type InferSchemaType } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
 const contentSectionSchema = new Schema(
   {
@@ -16,20 +16,20 @@ contentSectionSchema.pre("validate", function () {
   if (this.type === "text" && !this.content) {
     throw new Error("Text sections require `content`");
   }
-  if (this.type === "image") {
-    if (!this.url) {
-      throw new Error("Image sections require `url`");
-    }
-    if (!this.alt) {
-      throw new Error("Image sections require `alt` text");
-    }
+  if (this.type === "image" && !this.url) {
+    throw new Error("Image sections require `url`");
   }
+  // `alt` is intentionally NOT required at the schema level: R15 only requires alt text
+  // before a story can go Active, not before it can be saved as a draft. The Active-
+  // transition guard (findMissingAltText in src/actions/stories.ts) is the actual
+  // enforcement point - a schema-level requirement here would make it impossible to save
+  // a draft with an image that doesn't have alt text yet.
 });
 
 const imageWithAltSchema = new Schema(
   {
     url: { type: String, required: true },
-    alt: { type: String, required: true },
+    alt: { type: String },
     caption: { type: String },
   },
   { _id: false }
@@ -72,4 +72,5 @@ postSchema.index(
 
 export type PostDocument = InferSchemaType<typeof postSchema>;
 
-export default mongoose.models.Post || mongoose.model("Post", postSchema);
+export default (mongoose.models.Post as Model<PostDocument>) ??
+  mongoose.model<PostDocument>("Post", postSchema);

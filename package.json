@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@vercel/functions": "^3.9.3",
     "cloudinary": "^2.10.0",
     "iron-session": "^8.0.4",
     "mongoose": "^9.9.2",

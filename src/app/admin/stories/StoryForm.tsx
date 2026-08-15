@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import slugify from "slugify";
 import { createStory, updateStory, deleteStory } from "@/actions/stories";
 import { ImageUploadField, type UploadedImage } from "@/components/ImageUploadField";
+import type { ContentSection, StorySeo } from "@/types/story";
 
 interface CategoryOption {
   _id: string;
@@ -14,14 +15,6 @@ interface CategoryOption {
 interface RelatedOption {
   _id: string;
   title: string;
-}
-
-interface ContentSection {
-  type: "text" | "image";
-  content?: string;
-  url?: string;
-  alt?: string;
-  caption?: string;
 }
 
 export interface StoryFormValues {
@@ -34,14 +27,7 @@ export interface StoryFormValues {
   category: string;
   tags: string;
   relatedPosts: string[];
-  seo: {
-    title?: string;
-    metaDescription?: string;
-    canonicalUrl?: string;
-    ogTitle?: string;
-    ogDescription?: string;
-    ogImage?: string;
-  };
+  seo: StorySeo;
   isActive: boolean;
 }
 

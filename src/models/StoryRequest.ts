@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
 const storyRequestSchema = new Schema(
   {
@@ -8,4 +8,7 @@ const storyRequestSchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.StoryRequest || mongoose.model("StoryRequest", storyRequestSchema);
+export type StoryRequestDocument = InferSchemaType<typeof storyRequestSchema>;
+
+export default (mongoose.models.StoryRequest as Model<StoryRequestDocument>) ??
+  mongoose.model<StoryRequestDocument>("StoryRequest", storyRequestSchema);

@@ -23,8 +23,11 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   }
 
   if (!cache.promise) {
-    cache.promise = mongoose.connect(uri, {
-      maxPoolSize: 5,
+    cache.promise = mongoose.connect(uri, { maxPoolSize: 5 }).catch((err) => {
+      // Clear the cached promise on failure so the next call retries instead of
+      // replaying this same rejected promise for the lifetime of the warm instance.
+      cache.promise = null;
+      throw err;
     });
   }
 

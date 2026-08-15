@@ -1,4 +1,4 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type InferSchemaType, type Model } from "mongoose";
 
 export const UNCATEGORIZED_SLUG = "uncategorized";
 
@@ -12,4 +12,7 @@ const categorySchema = new Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Category || mongoose.model("Category", categorySchema);
+export type CategoryDocument = InferSchemaType<typeof categorySchema>;
+
+export default (mongoose.models.Category as Model<CategoryDocument>) ??
+  mongoose.model<CategoryDocument>("Category", categorySchema);

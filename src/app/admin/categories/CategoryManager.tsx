@@ -2,7 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createCategory, renameCategory, deleteCategory } from "@/actions/categories";
+import {
+  createCategory,
+  renameCategory,
+  deleteCategory,
+  repairCategoryNameDrift,
+} from "@/actions/categories";
 
 interface CategoryRow {
   _id: string;
@@ -18,6 +23,7 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
   const [isPending, startTransition] = useTransition();
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [repairMessage, setRepairMessage] = useState<string | null>(null);
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -48,6 +54,24 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
     });
   }
 
+  function handleRepair(id: string, name: string) {
+    setError(null);
+    setRepairMessage(null);
+    startTransition(async () => {
+      try {
+        const { driftedCount } = await repairCategoryNameDrift(id);
+        setRepairMessage(
+          driftedCount > 0
+            ? `Fixed ${driftedCount} story(ies) with a stale category name under "${name}".`
+            : `No drift found for "${name}".`
+        );
+        router.refresh();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to repair category names");
+      }
+    });
+  }
+
   function handleDelete(id: string, name: string) {
     if (!window.confirm(`Delete "${name}"? Stories in it move to Uncategorized.`)) {
       return;
@@ -68,6 +92,11 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
       {error && (
         <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
           {error}
+        </p>
+      )}
+      {repairMessage && (
+        <p className="rounded bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+          {repairMessage}
         </p>
       )}
 
@@ -102,14 +131,16 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
                   className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
                 />
                 <button
+                  disabled={isPending}
                   onClick={() => handleRename(category._id)}
-                  className="text-sm font-medium text-neutral-900"
+                  className="text-sm font-medium text-neutral-900 disabled:opacity-50"
                 >
                   Save
                 </button>
                 <button
+                  disabled={isPending}
                   onClick={() => setRenamingId(null)}
-                  className="text-sm text-neutral-500"
+                  className="text-sm text-neutral-500 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -122,25 +153,34 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
                     <span className="ml-2 text-xs text-neutral-400">(protected)</span>
                   )}
                 </span>
-                {!category.isProtected && (
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => {
-                        setRenamingId(category._id);
-                        setRenameValue(category.name);
-                      }}
-                      className="text-sm text-neutral-600 hover:underline"
-                    >
-                      Rename
-                    </button>
-                    <button
-                      onClick={() => handleDelete(category._id, category.name)}
-                      className="text-sm text-red-600 hover:underline"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-3">
+                  <button
+                    disabled={isPending}
+                    onClick={() => handleRepair(category._id, category.name)}
+                    className="text-sm text-neutral-600 hover:underline disabled:opacity-50"
+                  >
+                    Repair
+                  </button>
+                  {!category.isProtected && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setRenamingId(category._id);
+                          setRenameValue(category.name);
+                        }}
+                        className="text-sm text-neutral-600 hover:underline"
+                      >
+                        Rename
+                      </button>
+                      <button
+                        onClick={() => handleDelete(category._id, category.name)}
+                        className="text-sm text-red-600 hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </>
+                  )}
+                </div>
               </>
             )}
           </li>

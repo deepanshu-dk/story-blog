@@ -35,8 +35,11 @@ export async function login(username: string, password: string): Promise<LoginRe
     return { success: false, error: "Too many attempts. Please try again later." };
   }
 
-  const adminUsername = process.env.ADMIN_USERNAME ?? "";
-  const adminPassword = process.env.ADMIN_PASSWORD ?? "";
+  const adminUsername = process.env.ADMIN_USERNAME;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminUsername || !adminPassword) {
+    throw new Error("ADMIN_USERNAME and ADMIN_PASSWORD environment variables must be set");
+  }
 
   const usernameMatches = safeCompare(username, adminUsername);
   const passwordMatches = safeCompare(password, adminPassword);
