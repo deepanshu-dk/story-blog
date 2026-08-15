@@ -128,3 +128,28 @@ export async function incrementViewCount(storyId: string): Promise<void> {
   await connectToDatabase();
   await Post.updateOne({ _id: storyId }, { $inc: { viewCount: 1 } });
 }
+
+/**
+ * Not cached via unstable_cache - unlike the fixed set of listing/story reads above,
+ * search query strings are unbounded, so caching every distinct query would grow the
+ * Data Cache without bound. A direct, `isActive: true`-filtered $text query is simple and
+ * sufficient at this scale (see docs/plans - Key Technical Decisions: Search).
+ *
+ * The incoming query is coerced to a string and rejected if it isn't one, rather than
+ * passed through to the $text query as-is.
+ */
+export async function searchActiveStories(rawQuery: unknown): Promise<PublicStory[]> {
+  if (typeof rawQuery !== "string" || rawQuery.trim().length === 0) {
+    return [];
+  }
+
+  await connectToDatabase();
+  const posts = await Post.find(
+    { isActive: true, $text: { $search: rawQuery } },
+    { score: { $meta: "textScore" } }
+  )
+    .sort({ score: { $meta: "textScore" } })
+    .lean();
+
+  return posts.map(serializePost);
+}
