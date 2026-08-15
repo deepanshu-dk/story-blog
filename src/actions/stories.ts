@@ -4,6 +4,7 @@ import { connectToDatabase } from "@/lib/db";
 import { requireAdminSession } from "@/lib/session";
 import Post from "@/models/Post";
 import { revalidateTags, postTag, categoryTag } from "@/lib/cacheTags";
+import { toPlain } from "@/lib/serialize";
 import type { ContentSection, StoryImage, StorySeo } from "@/types/story";
 
 export type { ContentSection as ContentSectionInput, StoryImage as ImageInput, StorySeo as SeoInput };
@@ -103,7 +104,7 @@ export async function createStory(input: StoryInput & { isActive: boolean }) {
   }
 
   await revalidateTags([postTag(created.slug), categoryTag(created.categoryName)]);
-  return created;
+  return toPlain(created);
 }
 
 export async function updateStory(
@@ -150,7 +151,7 @@ export async function updateStory(
     categoryTag(previousCategoryName),
   ]);
 
-  return existing;
+  return toPlain(existing);
 }
 
 export async function deleteStory(id: string) {

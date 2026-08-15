@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { ipAddress } from "@vercel/functions";
+import { IP_HEADER_NAME } from "@vercel/functions/headers";
 import { connectToDatabase } from "@/lib/db";
 import RateLimitAttempt from "@/models/RateLimitAttempt";
 
@@ -7,17 +7,23 @@ const MAX_ATTEMPTS = 5;
 const BACKOFF_MINUTES = 15;
 
 /**
- * Extracts the client IP via Vercel's official `ipAddress()` helper (reads the
- * platform-set `x-real-ip`/`x-vercel-forwarded-for` headers), not by manually parsing
- * `x-forwarded-for`. Vercel's own docs state it overwrites `x-forwarded-for` for direct
- * deployments (no attacker-controlled entries survive), but that guarantee only holds
- * without a third-party reverse proxy in front of the deployment - parsing position
- * (first vs. last) in that header is not a reliable trust signal either way. `ipAddress()`
- * is the platform-recommended API precisely to avoid this footgun.
+ * Reads the platform-set `x-real-ip` header directly (the same header Vercel's official
+ * `ipAddress()` helper reads - `IP_HEADER_NAME` is exported from `@vercel/functions` for
+ * exactly this), rather than manually parsing `x-forwarded-for`. Vercel's docs state it
+ * overwrites `x-forwarded-for` for direct deployments (no attacker-controlled entries
+ * survive), but that guarantee only holds without a third-party reverse proxy in front of
+ * the deployment - parsing position (first vs. last) in that header is not a reliable
+ * trust signal either way.
+ *
+ * `ipAddress()` itself is not used here: it duck-types its input as `"headers" in input ?
+ * input.headers : input`, and Next.js's `headers()` return value is a dynamic-tracking
+ * Proxy whose `has` trap makes `"headers" in headerList` evaluate true for any property
+ * name - `ipAddress()` then reads the (nonexistent) `.headers` property and crashes with
+ * "headers.get is not a function". Reading the header directly sidesteps that.
  */
 export async function getClientIp(): Promise<string> {
   const headerList = await headers();
-  return ipAddress(headerList) ?? "unknown";
+  return headerList.get(IP_HEADER_NAME) ?? "unknown";
 }
 
 export interface RateLimitResult {

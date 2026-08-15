@@ -6,6 +6,7 @@ import { requireAdminSession } from "@/lib/session";
 import Category, { UNCATEGORIZED_SLUG } from "@/models/Category";
 import Post from "@/models/Post";
 import { revalidateTags, categoryTag } from "@/lib/cacheTags";
+import { toPlain } from "@/lib/serialize";
 
 export async function listCategories() {
   await requireAdminSession();
@@ -17,7 +18,8 @@ export async function createCategory(name: string) {
   await requireAdminSession();
   await connectToDatabase();
   const slug = slugify(name, { lower: true, strict: true });
-  return Category.create({ name, slug });
+  const category = await Category.create({ name, slug });
+  return toPlain(category);
 }
 
 export async function ensureUncategorizedCategory() {
@@ -74,7 +76,7 @@ export async function renameCategory(categoryId: string, newName: string) {
 
   await revalidateTags([categoryTag(previousName), categoryTag(newName)]);
 
-  return category;
+  return toPlain(category);
 }
 
 /**
