@@ -5,7 +5,9 @@ let mongod: MongoMemoryServer | null = null;
 
 export async function connectTestDb() {
   mongod = await MongoMemoryServer.create();
-  await mongoose.connect(mongod.getUri());
+  const uri = mongod.getUri();
+  process.env.MONGODB_URI = uri;
+  await mongoose.connect(uri);
 }
 
 export async function disconnectTestDb() {
