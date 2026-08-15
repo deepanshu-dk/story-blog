@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   getActiveStoryBySlug,
@@ -7,6 +8,33 @@ import {
 import { getSession } from "@/lib/session";
 import { StoryCard } from "@/components/StoryCard";
 import { StoryRequestForm } from "@/components/StoryRequestForm";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const story = await getActiveStoryBySlug(slug);
+  if (!story) {
+    return {};
+  }
+
+  const title = story.seo.title || story.title;
+  const description = story.seo.metaDescription || story.intro;
+  const ogImage = story.seo.ogImage || story.featuredImage.url;
+
+  return {
+    title,
+    description,
+    alternates: story.seo.canonicalUrl ? { canonical: story.seo.canonicalUrl } : undefined,
+    openGraph: {
+      title: story.seo.ogTitle || title,
+      description: story.seo.ogDescription || description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default async function StoryPage({
   params,
