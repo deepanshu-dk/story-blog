@@ -6,6 +6,7 @@ import {
 } from "@/lib/publicStories";
 import { getSession } from "@/lib/session";
 import { StoryCard } from "@/components/StoryCard";
+import { StoryRequestForm } from "@/components/StoryRequestForm";
 
 export default async function StoryPage({
   params,
@@ -74,6 +75,8 @@ export default async function StoryPage({
           </div>
         </section>
       )}
+
+      <StoryRequestForm />
     </article>
   );
 }
