@@ -1,7 +1,7 @@
 ---
 title: Admin-Managed CMS for the Hindi Vrat Katha Blog
 type: feat
-status: active
+status: completed
 date: 2026-08-15
 origin: docs/brainstorms/2026-08-15-001-admin-cms-requirements.md
 deepened: 2026-08-15
