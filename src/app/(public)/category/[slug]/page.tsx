@@ -21,11 +21,11 @@ export default async function CategoryPage({
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
-      <h1 className="text-xl font-semibold text-neutral-900">{category.name}</h1>
+      <h1 className="text-2xl font-bold text-neutral-900">{category.name}</h1>
       {stories.length === 0 ? (
-        <p className="text-sm text-neutral-500">इस श्रेणी में अभी कोई कथा नहीं है।</p>
+        <p className="text-lg text-neutral-600">इस श्रेणी में अभी कोई कथा नहीं है।</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
           {stories.map((story) => (
             <StoryCard key={story.id} story={story} />
           ))}

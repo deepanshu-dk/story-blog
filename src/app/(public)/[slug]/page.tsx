@@ -61,24 +61,26 @@ export default async function StoryPage({
   const related = await listRelatedStories(story);
 
   return (
-    <article className="mx-auto max-w-2xl space-y-6 p-6">
-      <header className="space-y-2">
-        <p className="text-xs font-medium text-amber-700">{story.categoryName}</p>
-        <h1 className="text-2xl font-semibold text-neutral-900">{story.title}</h1>
-        <p className="text-neutral-700">{story.intro}</p>
+    <article className="mx-auto max-w-2xl space-y-8 p-6">
+      <header className="space-y-3">
+        <p className="text-base font-semibold text-amber-700">{story.categoryName}</p>
+        <h1 className="text-3xl font-bold leading-snug text-neutral-900 sm:text-4xl">
+          {story.title}
+        </h1>
+        <p className="text-xl leading-relaxed text-neutral-800">{story.intro}</p>
       </header>
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={story.featuredImage.url}
         alt={story.featuredImage.alt}
-        className="w-full rounded-lg object-cover"
+        className="w-full rounded-xl object-cover"
       />
 
-      <div className="prose prose-neutral max-w-none space-y-4">
+      <div className="max-w-none space-y-5">
         {story.contentSections.map((section, index) =>
           section.type === "text" ? (
-            <p key={index} className="whitespace-pre-line text-neutral-800">
+            <p key={index} className="whitespace-pre-line text-xl leading-loose text-neutral-800">
               {section.content}
             </p>
           ) : (
@@ -87,7 +89,7 @@ export default async function StoryPage({
               key={index}
               src={section.url}
               alt={section.alt}
-              className="w-full rounded-lg object-cover"
+              className="w-full rounded-xl object-cover"
             />
           )
         )}
@@ -95,8 +97,8 @@ export default async function StoryPage({
 
       {related.length > 0 && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold text-neutral-900">संबंधित कथाएं</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <h2 className="mb-4 text-2xl font-bold text-neutral-900">संबंधित कथाएं</h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
             {related.map((r) => (
               <StoryCard key={r.id} story={r} />
             ))}

@@ -27,22 +27,22 @@ export function StoryRequestForm() {
 
   if (status === "sent") {
     return (
-      <p className="rounded bg-green-50 p-4 text-sm text-green-800">
+      <p className="rounded-xl bg-green-50 p-5 text-lg font-medium text-green-800">
         धन्यवाद! आपका सुझाव मिल गया है।
       </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg bg-amber-100 p-4">
-      <h2 className="text-base font-semibold text-amber-900">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-xl bg-amber-100 p-6">
+      <h2 className="text-xl font-bold text-amber-900">
         क्या आपको यह कथा पसंद आई?
       </h2>
-      <p className="text-sm text-neutral-700">
+      <p className="text-lg text-neutral-800">
         अगर हाँ, तो आप अगली कौन-सी कहानी पढ़ना चाहते हैं?
       </p>
 
-      {error && <p className="text-sm text-red-700">{error}</p>}
+      {error && <p className="text-lg text-red-700">{error}</p>}
 
       {/* Hidden honeypot field - real readers never see or fill this. */}
       <input
@@ -62,13 +62,13 @@ export function StoryRequestForm() {
         rows={2}
         maxLength={500}
         placeholder="जैसे: तीज व्रत कथा"
-        className="w-full rounded border border-amber-300 px-3 py-2 text-sm"
+        className="w-full rounded-lg border-2 border-amber-300 px-4 py-3 text-lg focus:border-amber-600 focus:outline-none"
       />
 
       <button
         type="submit"
         disabled={isPending || !message.trim()}
-        className="rounded bg-amber-800 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+        className="rounded-lg bg-amber-800 px-6 py-3 text-lg font-medium text-white hover:bg-amber-900 disabled:opacity-50"
       >
         {isPending ? "भेज रहे हैं..." : "सुझाव भेजें"}
       </button>

@@ -3,6 +3,12 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* This site has one deliberately-designed light theme - it does not adapt to dark
+     mode. Without this, browsers that auto-invert pages lacking a declared color-scheme
+     (e.g. Chrome/Safari's "auto dark for web content") repaint large background regions
+     black while leaving white cards alone, producing exactly the low-contrast, patchy
+     look this was breaking on. */
+  color-scheme: light;
 }
 
 @theme inline {
@@ -10,13 +16,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
