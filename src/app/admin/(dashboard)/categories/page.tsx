@@ -15,8 +15,8 @@ export default async function CategoriesPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 p-6">
-      <h1 className="text-xl font-semibold text-neutral-900">Categories</h1>
+    <div className="mx-auto max-w-3xl space-y-6 p-8">
+      <h1 className="text-2xl font-bold text-neutral-900">Categories</h1>
       <CategoryManager categories={categories} />
     </div>
   );

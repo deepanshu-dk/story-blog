@@ -3,6 +3,8 @@ import type { Types } from "mongoose";
 import { connectToDatabase } from "@/lib/db";
 import Post, { type PostDocument } from "@/models/Post";
 import { POSTS_TAG, postTag, categoryTag } from "@/lib/cacheTags";
+import { buildSearchQuery } from "@/lib/searchQuery";
+import { requireAdminSession } from "@/lib/session";
 import type { ContentSection, StoryImage, StorySeo } from "@/types/story";
 
 export type { ContentSection as PublicContentSection, StoryImage as PublicImage, StorySeo as PublicSeo };
@@ -21,6 +23,7 @@ export interface PublicStory {
   seo: StorySeo;
   viewCount: number;
   createdAt: string;
+  isActive: boolean;
 }
 
 type LeanPost = PostDocument & { _id: Types.ObjectId };
@@ -54,6 +57,7 @@ function serializePost(post: LeanPost): PublicStory {
     },
     viewCount: post.viewCount,
     createdAt: new Date(post.createdAt).toISOString(),
+    isActive: post.isActive,
   };
 }
 
@@ -72,6 +76,18 @@ export async function getActiveStoryBySlug(slug: string): Promise<PublicStory | 
     ["active-story", slug],
     { tags: [POSTS_TAG, postTag(slug)] }
   )();
+}
+
+/**
+ * Lets an authenticated admin preview a draft or deactivated story before it's Active -
+ * requireAdminSession() throws for anyone else. Deliberately not cached via unstable_cache,
+ * since a preview must always reflect the just-saved draft, not a stale Data Cache entry.
+ */
+export async function getStoryPreviewBySlug(slug: string): Promise<PublicStory | null> {
+  await requireAdminSession();
+  await connectToDatabase();
+  const post = await Post.findOne({ slug }).lean();
+  return post ? serializePost(post as LeanPost) : null;
 }
 
 export async function listActiveStories(limit = 20): Promise<PublicStory[]> {
@@ -128,11 +144,11 @@ export async function incrementViewCount(storyId: string): Promise<void> {
 /**
  * Not cached via unstable_cache - unlike the fixed set of listing/story reads above,
  * search query strings are unbounded, so caching every distinct query would grow the
- * Data Cache without bound. A direct, `isActive: true`-filtered $text query is simple and
- * sufficient at this scale (see docs/plans - Key Technical Decisions: Search).
+ * Data Cache without bound. A direct, `isActive: true`-filtered substring match is simple
+ * and sufficient at this scale (see docs/plans - Key Technical Decisions: Search).
  *
  * The incoming query is coerced to a string and rejected if it isn't one, rather than
- * passed through to the $text query as-is.
+ * passed through to the query as-is.
  */
 export async function searchActiveStories(rawQuery: unknown): Promise<PublicStory[]> {
   if (typeof rawQuery !== "string" || rawQuery.trim().length === 0) {
@@ -140,11 +156,8 @@ export async function searchActiveStories(rawQuery: unknown): Promise<PublicStor
   }
 
   await connectToDatabase();
-  const posts = await Post.find(
-    { isActive: true, $text: { $search: rawQuery } },
-    { score: { $meta: "textScore" } }
-  )
-    .sort({ score: { $meta: "textScore" } })
+  const posts = await Post.find({ isActive: true, ...buildSearchQuery(rawQuery) })
+    .sort({ createdAt: -1 })
     .lean();
 
   return (posts as LeanPost[]).map(serializePost);

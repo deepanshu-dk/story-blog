@@ -145,6 +145,34 @@ export function StoryForm({
     });
   }
 
+  function handlePreview() {
+    setError(null);
+    // Opened synchronously (before the async save) so browsers don't treat it as a
+    // blocked popup - only a same-tick window.open() counts as user-initiated.
+    const previewWindow = window.open("", "_blank");
+    startTransition(async () => {
+      try {
+        // Preserve whatever Active/Inactive state the story already has - preview must
+        // not silently publish a draft or deactivate a live story.
+        const input = buildInput(values.isActive);
+        if (isEditing && initial?._id) {
+          const updated = await updateStory(initial._id, input);
+          if (previewWindow) previewWindow.location.href = `/${updated.slug}`;
+          router.refresh();
+        } else {
+          const created = await createStory(input);
+          if (previewWindow) previewWindow.location.href = `/${created.slug}`;
+          // Move this tab into edit mode for the story that was just created, so a
+          // follow-up Save/Publish click updates it instead of creating a duplicate.
+          router.push(`/admin/stories/${created._id}/edit`);
+        }
+      } catch (err) {
+        previewWindow?.close();
+        setError(err instanceof Error ? err.message : "Failed to save story for preview");
+      }
+    });
+  }
+
   function handleDelete() {
     if (!initial?._id) return;
     const confirmed = window.confirm(
@@ -361,8 +389,16 @@ export function StoryForm({
           <button
             type="button"
             disabled={isPending}
+            onClick={handlePreview}
+            className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100 disabled:opacity-50"
+          >
+            Preview
+          </button>
+          <button
+            type="button"
+            disabled={isPending}
             onClick={() => handleSave(false)}
-            className="rounded border border-neutral-300 px-4 py-2 text-sm font-medium disabled:opacity-50"
+            className="rounded-lg border border-neutral-300 px-4 py-2 text-sm font-medium hover:bg-neutral-50 disabled:opacity-50"
           >
             Save as draft
           </button>
@@ -370,7 +406,7 @@ export function StoryForm({
             type="button"
             disabled={isPending}
             onClick={() => handleSave(true)}
-            className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+            className="rounded-lg bg-neutral-900 px-4 py-2 text-sm font-semibold text-white hover:bg-neutral-800 disabled:opacity-50"
           >
             {values.isActive ? "Save" : "Publish"}
           </button>
@@ -380,7 +416,7 @@ export function StoryForm({
             type="button"
             disabled={isPending}
             onClick={handleDelete}
-            className="text-sm font-medium text-red-600 disabled:opacity-50"
+            className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
           >
             Delete story
           </button>

@@ -90,74 +90,81 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
   return (
     <div className="space-y-6">
       {error && (
-        <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
           {error}
         </p>
       )}
       {repairMessage && (
-        <p className="rounded bg-neutral-50 px-3 py-2 text-sm text-neutral-700">
+        <p className="rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
           {repairMessage}
         </p>
       )}
 
-      <form onSubmit={handleCreate} className="flex gap-2">
+      <form onSubmit={handleCreate} className="flex gap-2 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
         <input
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
           placeholder="New category name"
-          className="flex-1 rounded border border-neutral-300 px-3 py-2 text-sm"
+          className="flex-1 rounded-lg border border-neutral-300 px-3 py-2.5 text-sm focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
         />
         <button
           type="submit"
           disabled={isPending}
-          className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          className="rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-50"
         >
           Add
         </button>
       </form>
 
-      <ul className="divide-y divide-neutral-200 rounded border border-neutral-200">
+      <ul className="space-y-2">
         {categories.length === 0 && (
-          <li className="p-4 text-sm text-neutral-500">No categories yet.</li>
+          <li className="rounded-xl border border-dashed border-neutral-300 bg-white p-6 text-center text-sm text-neutral-500">
+            No categories yet.
+          </li>
         )}
         {categories.map((category) => (
-          <li key={category._id} className="flex items-center justify-between gap-3 p-3">
+          <li
+            key={category._id}
+            className="flex items-center justify-between gap-3 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm"
+          >
             {renamingId === category._id ? (
               <div className="flex flex-1 gap-2">
                 <input
                   autoFocus
                   value={renameValue}
                   onChange={(e) => setRenameValue(e.target.value)}
-                  className="flex-1 rounded border border-neutral-300 px-2 py-1 text-sm"
+                  className="flex-1 rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 />
                 <button
                   disabled={isPending}
                   onClick={() => handleRename(category._id)}
-                  className="text-sm font-medium text-neutral-900 disabled:opacity-50"
+                  className="rounded-lg bg-neutral-900 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
                 >
                   Save
                 </button>
                 <button
                   disabled={isPending}
                   onClick={() => setRenamingId(null)}
-                  className="text-sm text-neutral-500 disabled:opacity-50"
+                  className="rounded-lg px-3 py-2 text-sm text-neutral-500 hover:bg-neutral-100 disabled:opacity-50"
                 >
                   Cancel
                 </button>
               </div>
             ) : (
               <>
-                <span className="text-sm text-neutral-900">
+                <span className="text-sm font-medium text-neutral-900">
                   {category.name}
                   {category.isProtected && (
-                    <span className="ml-2 text-xs text-neutral-400">(protected)</span>
+                    <span className="ml-2 rounded-full bg-neutral-100 px-2 py-0.5 text-xs font-normal text-neutral-500">
+                      protected
+                    </span>
                   )}
                 </span>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
                     disabled={isPending}
                     onClick={() => handleRepair(category._id, category.name)}
-                    className="text-sm text-neutral-600 hover:underline disabled:opacity-50"
+                    className="text-sm font-medium text-neutral-600 hover:text-amber-700 hover:underline disabled:opacity-50"
                   >
                     Repair
                   </button>
@@ -168,13 +175,13 @@ export function CategoryManager({ categories }: { categories: CategoryRow[] }) {
                           setRenamingId(category._id);
                           setRenameValue(category.name);
                         }}
-                        className="text-sm text-neutral-600 hover:underline"
+                        className="text-sm font-medium text-neutral-600 hover:text-amber-700 hover:underline"
                       >
                         Rename
                       </button>
                       <button
                         onClick={() => handleDelete(category._id, category.name)}
-                        className="text-sm text-red-600 hover:underline"
+                        className="text-sm font-medium text-red-600 hover:underline"
                       >
                         Delete
                       </button>

@@ -24,12 +24,15 @@ export function SecurityActions() {
   }
 
   return (
-    <div className="space-y-2">
-      {message && <p className="text-sm text-neutral-600">{message}</p>}
+    <div className="space-y-3">
+      <p className="text-sm text-neutral-500">
+        Logs out every admin session everywhere, including this one, if credentials may be compromised.
+      </p>
+      {message && <p className="text-sm font-medium text-amber-700">{message}</p>}
       <button
         disabled={isPending}
         onClick={handleInvalidate}
-        className="rounded border border-red-300 px-4 py-2 text-sm font-medium text-red-700 disabled:opacity-50"
+        className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-50"
       >
         Invalidate all admin sessions
       </button>

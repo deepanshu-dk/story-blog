@@ -5,6 +5,7 @@ import { requireAdminSession } from "@/lib/session";
 import Post from "@/models/Post";
 import { revalidateTags, postTag, categoryTag } from "@/lib/cacheTags";
 import { toPlain } from "@/lib/serialize";
+import { buildSearchQuery } from "@/lib/searchQuery";
 import type { ContentSection, StoryImage, StorySeo } from "@/types/story";
 
 export type { ContentSection as ContentSectionInput, StoryImage as ImageInput, StorySeo as SeoInput };
@@ -44,7 +45,7 @@ export async function listStories(filters: StoryListFilters = {}) {
 
   const query: Record<string, unknown> = {};
   if (filters.search) {
-    query.$text = { $search: filters.search };
+    Object.assign(query, buildSearchQuery(filters.search));
   }
   if (filters.category) {
     query.category = filters.category;

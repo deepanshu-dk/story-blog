@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import {
   getActiveStoryBySlug,
+  getStoryPreviewBySlug,
   listRelatedStories,
   incrementViewCount,
 } from "@/lib/publicStories";
@@ -42,7 +43,15 @@ export default async function StoryPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const story = await getActiveStoryBySlug(slug);
+  const session = await getSession();
+
+  let story = await getActiveStoryBySlug(slug);
+  if (!story && session.isAdmin) {
+    // Lets an admin preview a draft/deactivated story via StoryForm's Preview button -
+    // requireAdminSession() inside getStoryPreviewBySlug is the real gate; this check is
+    // just an optimization to skip the extra lookup for non-admin visitors.
+    story = await getStoryPreviewBySlug(slug);
+  }
 
   // Next.js App Router pages can only cleanly emit 404 (via notFound()) - there is no
   // first-class way to emit a genuine 410 without dropping to a hand-built Route Handler
@@ -53,7 +62,6 @@ export default async function StoryPage({
     notFound();
   }
 
-  const session = await getSession();
   if (!session.isAdmin) {
     await incrementViewCount(story.id);
   }
@@ -62,6 +70,11 @@ export default async function StoryPage({
 
   return (
     <article className="mx-auto max-w-2xl space-y-8 p-6">
+      {session.isAdmin && !story.isActive && (
+        <p className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+          Preview mode - this story is not Active and isn&apos;t visible to visitors yet.
+        </p>
+      )}
       <header className="space-y-3">
         <p className="text-base font-semibold text-amber-700">{story.categoryName}</p>
         <h1 className="text-3xl font-bold leading-snug text-neutral-900 sm:text-4xl">
