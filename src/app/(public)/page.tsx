@@ -1,6 +1,12 @@
 import { listActiveStories } from "@/lib/publicStories";
 import { StoryCard } from "@/components/StoryCard";
 
+// Statically prerendered by default, which queries the DB at *build* time - the build
+// sandbox's network path to MongoDB Atlas isn't reliable (see sitemap.ts for the same
+// issue). force-dynamic renders per-request instead; listActiveStories() is still
+// unstable_cache-wrapped, so this stays cheap.
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const stories = await listActiveStories(20);
 
