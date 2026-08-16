@@ -23,7 +23,11 @@ export async function connectToDatabase(): Promise<typeof mongoose> {
   }
 
   if (!cache.promise) {
-    cache.promise = mongoose.connect(uri, { maxPoolSize: 5 }).catch((err) => {
+    // family: 4 forces IPv4 DNS resolution - Vercel's serverless runtime can resolve an
+    // Atlas shard's AAAA record but fail to actually route to it, which surfaces as
+    // MongooseServerSelectionError ("ReplicaSetNoPrimary") even though the SRV lookup and
+    // whitelist are both fine.
+    cache.promise = mongoose.connect(uri, { maxPoolSize: 5, family: 4 }).catch((err) => {
       // Clear the cached promise on failure so the next call retries instead of
       // replaying this same rejected promise for the lifetime of the warm instance.
       cache.promise = null;
